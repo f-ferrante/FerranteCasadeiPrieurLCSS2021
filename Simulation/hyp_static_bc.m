@@ -2,7 +2,6 @@
 function [x1,t1, V1to, V2to,V3to, V4to, V5to, V6to, V7to, V8to]=hyp_static_bc
 global  K B H lamb1 lamb2 Thorizon
 method = 'LxF';
-%method = 'SLxW';
 pdefun = @pdes;
 Nx=500;
 x = linspace(0,1,Nx);
@@ -10,16 +9,16 @@ Tinit = 0;
 t = Tinit;
 
 % Initial conditions %%%% SHOULD SATISFY THE COMPATIBILITY CONDITION
-V(1,:)=(cos(2*pi*x)-1)*1;
-V(2,:)=-(cos(2*pi*x)-1)*1;
+V(1,:)=(cos(2*pi*x)-1);
+V(2,:)=-(cos(2*pi*x)-1);
 
-V(3,:)=0*x.*(x-1);
-V(4,:)=-0*(sin(2*pi*x));
+V(3,:)=0*x;
+V(4,:)=-0*x;
 
 V(5,:)=2*(sin(2*pi*x));
-V(6,:)=-0*(sin(4*pi*x));
+V(6,:)=-0*x;
 
-V(7,:)=0*(sin(2*pi*x));
+V(7,:)=0*x;
 V(8,:)=-2*(sin(4*pi*x));
 
 sol = setup(1,pdefun,t,x,V,method,[],@bcfun);
@@ -86,27 +85,14 @@ t = linspace(Tinit,Thorizon,Nt);
 %=========================================================================
 % Subfunctions
 
-    function F = pdes(t,x,V,V_x) % linear PDE
-         %global lamb1 lamb2
-         %keyboard
+    function F = pdes(t,x,V,V_x) %implement the righthand side
         F = zeros(size(V));
-       % f1=abs(V(1,:)+1)-abs(V(1,:)-1);
-        %f2=abs(V(3,:)+1)-abs(V(3,:)-1);
-        %f3=abs(V(5,:)+1)-abs(V(5,:)-1);
-        f1=0.1*sin(V(1,:));
-        f2=0.1*sin(V(3,:));
-        f3=0.1*sin(V(5,:));
-        f4=0.1*sin(V(7,:));
-        
-        %f1=0*tanh(V(1,:));
-        %f2=0*tanh(V(3,:));
-        %f3=0*tanh(V(5,:));
-        f1=0.1*tanh(V(1,:));
+        f1=0.1*tanh(V(1,:)); % nonlinear terms
         f2=0.1*tanh(V(3,:));
         f3=0.1*tanh(V(5,:));
         f4=0.1*tanh(V(7,:));
         
-        F(1,:) = -lamb1.*V_x(1,:)+f1;
+        F(1,:) = -lamb1.*V_x(1,:)+f1; %righthand side
         F(2,:) = -lamb2.*V_x(2,:);
         
         F(3,:) = -lamb1.*V_x(3,:)+f2;
@@ -120,14 +106,14 @@ t = linspace(Tinit,Thorizon,Nt);
     % end function pdes
     end
     function [XL,XR] = bcfun(t,XLex,XRex)
-    global  L
+    global  L %laplacian matrix
     XLtmp = XLex;
-    %keyboard
-
+    %definition the boundary conditions
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+     
     Xbc1=H*[XRex(1);XRex(2)]+B*K*(L(1,1)*[XRex(1);XRex(2)]...
          +L(1,2)*[XRex(3);XRex(4)]+L(1,3)*[XRex(5);XRex(6)]+L(1,4)*[XRex(7);XRex(8)]);
      
-   
      Xbc2=H*[XRex(3);XRex(4)]+B*K*(L(2,1)*[XRex(1);XRex(2)]...
          +L(2,2)*[XRex(3);XRex(4)]+L(2,3)*[XRex(5);XRex(6)]+...
          L(2,4)*[XRex(7);XRex(8)]);
@@ -139,7 +125,9 @@ t = linspace(Tinit,Thorizon,Nt);
      Xbc4=H*[XRex(7);XRex(8)]+B*K*(L(4,1)*[XRex(1);XRex(2)]...
          +L(4,2)*[XRex(3);XRex(4)]+L(4,3)*[XRex(5);XRex(6)]+...
          L(4,4)*[XRex(7);XRex(8)]);
-    
+     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+     
+    %Implementation of the boundary conditions, i.e., x(0)=Hx(1)
     XLtmp(1) = [1 0]*Xbc1;
     XLtmp(2) = [0 1]*Xbc1;
     XLtmp(3) = [1 0]*Xbc2;
